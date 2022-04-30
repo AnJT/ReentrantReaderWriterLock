@@ -91,6 +91,7 @@ public void EnterReadLock()
     }
     Monitor.Exit(stateLock);
 
+    Monitor.Enter(_lock);
     writeEvent.WaitOne();
     Monitor.Enter(stateLock);
     if (SharedCount(state) == 0)
@@ -104,6 +105,7 @@ public void EnterReadLock()
     state += SHARED_UNIT;
     Monitor.Exit(stateLock);
     writeEvent.Set();
+    Monitor.Exit(_lock);
 }
 ```
 
