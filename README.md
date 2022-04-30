@@ -378,7 +378,7 @@ ReaderWriterLockSlim 作为 Baseline做性能比较
 
 - 优点
 
-  - 实现写优先
+  - 写优先
   - 可重入
 
 - 缺点
