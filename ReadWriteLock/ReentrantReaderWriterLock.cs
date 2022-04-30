@@ -18,6 +18,8 @@ namespace ReadWriteLock
 
         private AutoResetEvent writeEvent;                                      // 用来实现写优先
         private AutoResetEvent readWriteEvent;                                  // 用来实现读写互斥
+        
+        private static readonly object _lock = new object();                    // 使每次与写者竞争的读者只有一个
 
         private int state;                                                      // 高16位表示写者数量，低16位表示读者数量
         private static readonly object stateLock = new object();                // 保护 state变量
@@ -49,10 +51,12 @@ namespace ReadWriteLock
          * 对 state变量的高 16位加 1，然后函数结束，读线程不受阻塞
          *
          * 读者竞争读写锁：
+         * 首先申请 _lock互斥量，保证每次与写者竞争的读者只有一个
          * 首先申请写信号 writeEvent
          * 第一个读者申请读写信号 readWriteEvent
          * 对 state变量的高 16位加 1
-         * 最后释放写信号 writeEvent
+         * 释放写信号 writeEvent
+         * 最后释放 _lock互斥量
          */
         public void EnterReadLock()
         {
@@ -70,7 +74,8 @@ namespace ReadWriteLock
             }
             Monitor.Exit(stateLock);
             
-            writeEvent.WaitOne(); // 先申请写
+            Monitor.Enter(_lock);
+            writeEvent.WaitOne();
             Monitor.Enter(stateLock);
             if (SharedCount(state) == 0)
             {
@@ -83,6 +88,7 @@ namespace ReadWriteLock
             state += SHARED_UNIT;
             Monitor.Exit(stateLock);
             writeEvent.Set();
+            Monitor.Exit(_lock);
         }
         
         /**
@@ -94,7 +100,7 @@ namespace ReadWriteLock
          * 对 state变量的高 16位减 1，然后函数结束，读线程退出不受阻塞
          *
          * 读者正常释放读写锁：
-         * 对 state变量的高 16位加 1
+         * 对 state变量的高 16位减 1
          * 最后一个读者释放读写信号 readWriteEvent
          */
         public void ExitReadLock()
@@ -170,6 +176,7 @@ namespace ReadWriteLock
          * 写者正常释放：
          * 首先释放读写信号 readWriteEvent
          * 再释放写信号 writeEvent
+         * 设置独占读写锁 ID为 -1
          */
         public void ExitWriteLock()
         {
