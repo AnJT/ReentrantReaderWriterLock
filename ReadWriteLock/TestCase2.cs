@@ -1,76 +1,37 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ReadWriteLock
+namespace ReadWriteLock;
+
+/**
+ * 测试读写锁的写互斥
+ * 申请100个线程，每个线程对变量自增100次
+ * 检测变量最终是否为10000
+ */
+public class TestCase2
 {
-    /**
-     * 测试可重入读写锁
-     * 写锁可以重入写锁，读锁可以重入写锁，写锁不可重入读锁
-     */
-    public class TestCase2
+    private int num = 0;
+    private ReentrantReaderWriterLock rwLock = new ReentrantReaderWriterLock();
+    
+    public void Test()
     {
-        public void Test()
+        System.Console.WriteLine("\nTest case 2 start!\n");
+        var tasks = new List<Task>();
+        for (int ctr = 0; ctr < 100; ctr++)
         {
-            System.Console.WriteLine("\nTest case 2 start!");
-            ReentrantReaderWriterLock rwLock = new ReentrantReaderWriterLock();
-            
-            // 测试读锁重入写锁
-            Task.Run(() =>
+            tasks.Add(Task.Run(() =>
             {
-                rwLock.EnterWriteLock();
-                rwLock.EnterReadLock();
-                rwLock.EnterReadLock();
-                System.Console.WriteLine("读锁重入写锁成功");
-                rwLock.ExitReadLock();
-                rwLock.ExitReadLock();
-                rwLock.ExitWriteLock();
-            }).Wait();
-            
-            // 测试写锁重入写锁
-            Task.Run(() =>
-            {
-                rwLock.EnterWriteLock();
-                rwLock.EnterWriteLock();
-                rwLock.EnterWriteLock();
-                System.Console.WriteLine("写锁重入写锁成功");
-                rwLock.ExitWriteLock();
-                rwLock.ExitWriteLock();
-                rwLock.ExitWriteLock();
-            }).Wait();
-            
-            // 测试读锁重入读锁
-            Task.Run(() =>
-            {
-                rwLock.EnterReadLock();
-                rwLock.EnterReadLock();
-                rwLock.EnterReadLock();
-                System.Console.WriteLine("读锁重入读锁成功");
-                rwLock.ExitReadLock();
-                rwLock.ExitReadLock();
-                rwLock.ExitReadLock();
-            }).Wait();
-            
-            // 测试写锁重入读锁
-            Task.Run(() =>
-            {
-                try
+                for (int i = 0; i < 100; i++)
                 {
                     rwLock.EnterWriteLock();
-                    rwLock.EnterReadLock();
-                    rwLock.EnterWriteLock();
-                    System.Console.WriteLine("写锁重入读锁成功");
+                    this.num += 1;
                     rwLock.ExitWriteLock();
-                    rwLock.ExitReadLock();
-                    rwLock.ExitWriteLock();
-                }catch (Exception e)
-                {
-                    System.Console.WriteLine(e.Message);
                 }
-                
-            }).Wait();
-            
-            System.Console.WriteLine("\nTest case 2 end!");
+            }));
         }
+
+        Task.WaitAll(tasks.ToArray());
+        System.Console.WriteLine("num: {0}", this.num);
+        System.Console.WriteLine("\nTest case 2 end!");
     }
 }
-

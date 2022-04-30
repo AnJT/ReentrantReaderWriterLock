@@ -13,7 +13,7 @@ namespace ReadWriteLock
     {
         public void Test()
         {
-            System.Console.WriteLine("\nTest case 1 start!");
+            System.Console.WriteLine("\nTest case 1 start!\n");
             var sc = new SynchronizedCache();
             var tasks = new List<Task>();
             int itemsWritten = 0;
@@ -21,7 +21,6 @@ namespace ReadWriteLock
             // 启动一个写者线程
             tasks.Add(Task.Run(() =>
             {
-                System.Console.WriteLine("\n写线程开始\n");
                 String[] vegetables = { "broccoli", "cauliflower", "carrot", "sorrel", "baby turnip",
                     "beet", "brussel sprout", "cabbage", "plantain",
                     "spinach", "grape leaves", "lime leaves", "corn",
@@ -32,8 +31,8 @@ namespace ReadWriteLock
                 itemsWritten = vegetables.Length;
                 Console.WriteLine("Task {0} wrote {1} items\n",
                     Task.CurrentId, itemsWritten);
-                System.Console.WriteLine("写线程结束\n");
             }));
+            
             // 启动两个读者线程，一个从字典首都读到尾部，一个从字典尾部读到首部
             for (int ctr = 0; ctr <= 1; ctr++) {
                 bool desc = ctr == 1;
@@ -62,8 +61,10 @@ namespace ReadWriteLock
                     } while (items < itemsWritten | itemsWritten == 0);
                 }));
             }
+            
             // 等待所有线程完成
             Task.WaitAll(tasks.ToArray());
+            
             // 输出缓存中最终的内容
             Console.WriteLine();
             Console.WriteLine("Values in synchronized cache: ");

@@ -6,6 +6,8 @@
         {
             new TestCase1().Test();
             new TestCase2().Test();
+            new TestCase3().Test();
+            new TestCase4().Test();
         }
     }
 }

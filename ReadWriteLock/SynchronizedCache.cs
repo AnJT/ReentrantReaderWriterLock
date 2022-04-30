@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace ReadWriteLock
 {
+    /**
+     *  SynchronizedCache 是一个多线程共享的缓冲区（数据结构为：Key-Value）
+     *  使用我们自己实现的 ReentrantReaderWriterLock 来保证读者写者正确同步性 
+     *  使用 SynchronizedCache 来保证与官方文档测试读写锁接口正确
+     *  参考自MSDN https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim
+     */
     public class SynchronizedCache
     {
         private ReentrantReaderWriterLock cacheLock = new ReentrantReaderWriterLock();

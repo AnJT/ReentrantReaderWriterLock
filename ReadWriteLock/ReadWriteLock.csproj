@@ -45,6 +45,8 @@
         <Compile Include="ReentrantReaderWriterLock.cs" />
         <Compile Include="SynchronizedCache.cs" />
         <Compile Include="TestCase1.cs" />
+        <Compile Include="TestCase3.cs" />
+        <Compile Include="TestCase4.cs" />
         <Compile Include="TestCase2.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

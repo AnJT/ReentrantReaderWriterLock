@@ -3,6 +3,15 @@ using System.Threading;
 
 namespace ReadWriteLock
 {
+    /**
+     * 可重入读写锁
+     * 符合第二读写者问题
+     * 支持最多 65535个重入写锁，最多65535个重入读锁
+     * 满足以下约束条件：
+     * - 写者与写者互斥，写者与读者互斥，读者与读者并发
+     * - 写优先
+     * - 支持锁的重入，写锁可以重入写锁，读锁可以重入写锁
+     */
     class ReentrantReaderWriterLock
     {
         private int exclusiveThreadId;                                          // 独占读写锁的线程 ID
@@ -33,6 +42,17 @@ namespace ReadWriteLock
         
         /**
          * 读者请求读写锁
+         * 
+         * 首先获取当前线程 ID与独占读写锁 ID比较，当ID相同时进行重入操作，否则进行竞争
+         * 
+         * 读者重入：
+         * 对 state变量的高 16位加 1，然后函数结束，读线程不受阻塞
+         *
+         * 读者竞争读写锁：
+         * 首先申请写信号 writeEvent
+         * 第一个读者申请读写信号 readWriteEvent
+         * 对 state变量的高 16位加 1
+         * 最后释放写信号 writeEvent
          */
         public void EnterReadLock()
         {
@@ -66,7 +86,16 @@ namespace ReadWriteLock
         }
         
         /**
-         * 读者释放读写锁 
+         * 读者释放读写锁
+         *
+         * 首先获取当前线程 ID与独占读写锁 ID比较，当ID相同时进行重入操作，否则进行竞争
+         *
+         * 读者重入释放读写锁：
+         * 对 state变量的高 16位减 1，然后函数结束，读线程退出不受阻塞
+         *
+         * 读者正常释放读写锁：
+         * 对 state变量的高 16位加 1
+         * 最后一个读者释放读写信号 readWriteEvent
          */
         public void ExitReadLock()
         {
@@ -88,7 +117,18 @@ namespace ReadWriteLock
         }
         
         /**
-         * 写者申请读写锁 
+         * 写者申请读写锁
+         *
+         * 首先获取当前线程 ID与独占读写锁 ID比较，当ID相同时并且没有读重入时进行重入操作，否则进行竞争
+         *
+         * 写者重入：
+         * 对 state变量的低 16位加 1，然后函数结束，写线程退出不受阻塞
+         *
+         * 写者竞争读写锁：
+         * 首先申请写信号 writeEvent
+         * 再申请读写信号 readWriteEvent
+         * 对 state变量的高 16位加 1
+         * 设置独占读写锁 ID为当前线程 ID
          */
         public void EnterWriteLock()
         {
@@ -119,7 +159,17 @@ namespace ReadWriteLock
         }
         
         /**
-         * 写者释放读写锁 
+         * 写者释放读写锁
+         *
+         * 对 state变量的低 16位减 1
+         * state不为0进行重入释放操作，否则进行正常释放
+         *
+         * 写者重入释放：
+         * 函数直接结束，写线程释放不受阻塞
+         *
+         * 写者正常释放：
+         * 首先释放读写信号 readWriteEvent
+         * 再释放写信号 writeEvent
          */
         public void ExitWriteLock()
         {
