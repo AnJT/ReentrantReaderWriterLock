@@ -159,6 +159,10 @@ namespace ReadWriteLock
             writeEvent.WaitOne();
             readWriteEvent.WaitOne();
             Monitor.Enter(stateLock);
+            if (ExclusiveCount(state + 1) > MAX_COUNT)
+            {
+                throw new Exception("写锁的数量大于65535!");
+            }
             exclusiveThreadId = Environment.CurrentManagedThreadId;
             state += 1;
             Monitor.Exit(stateLock);
